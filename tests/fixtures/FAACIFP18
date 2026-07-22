@@ -1,0 +1,71 @@
+SCANP PABEPAABET     0     064YHN60464280W161501380E011000129         1800018000C    MNAR    BETHEL                        057061707
+SCANP PABEPAFR01L  ACITAY 010CITAYPAPC0E  A    IF                                             18000                 A JS   057811310
+SCANP PABEPAFR01L  ACITAY 020ROMACPAPC0EE B 010TF                                 + 02000                           A JS   057822403
+SCANP PABEPAFR01L  ALIJHA 010LIJHAPAPC0E  A    IF                                             18000                 A JS   057831310
+SCANP PABEPAFR01L  ALIJHA 020ROMACPAPC0EE B 010TF                                 + 02000                           A JS   057842403
+SCANP PABEPAFR01L  AROMAC 010ROMACPAPC0EE AR   HF                     01230040    + 02000     18000                 A JS   057851707
+SCANP PABEPAFR01L  R      010ROMACPAPC0E  I    IF                                 + 02000     18000                 A JS   057861310
+SCANP PABEPAFR01L  R      020NAPACPAPC1E  F 010TF                                 + 01800                           A JS   057872403
+SCANP PABEPAFR01L  R      020NAPACPAPC2WALPV       ALNAV/VNAV ALNAV                                                   JS   057881310
+SCANP PABEPAFR01L  R      030RW01LPAPG0GY M 031TF                                   00174             -300          A JS   057892403
+SCANP PABEPAFR01L  R      040         0  M     CA                     0124        + 00377                           A JS   057901707
+SCANP PABEPAFR01L  R      050KUSKMPAPC0E    010DF                                                                   A JS   057911310
+SCANP PABEPAFR01L  R      060ROLLRPAEA0EY  L010TFY                                + 02000                           A JS   057922403
+SCANP PABEPAFR01L  R      070ROLLRPAEA0EE  R   HM                     10020040    + 02000                           A JS   057931707
+SCANP PAFAPAAFAI     0     118YHN64485528W147512400E015000439         1800018000C    MNAR    FAIRBANKS INTL                074802211
+SCANP PAFAPAFH02LZ AGLDHL 010GLDHLPAPC0E  A    IF                                             18000240              A-FS   076102310
+SCANP PAFAPAFH02LZ AGLDHL 020UKCORPAPC0E  B 010TF                                 + 04000          230              A-FS   076112310
+SCANP PAFAPAFH02LZ AGLDHL 030WULSEPAPC0E    010TF                                 + 04000          210              A-FS   076121707
+SCANP PAFAPAFH02LZ AGLDHL 040OKXACPAPC0E   L010RF       0025001938    12020032    + 03200                 CFNRF PAPCA FS   076132310
+SCANP PAFAPAFH02LZ AGLDHL 050JIRIGPAPC0E   L010RF       0025001202    02290043    + 02200                 CFNRF PAPCA FS   076142310
+SCANP PAFAPAFH02LZ AGLDHL 060HONUTPAPC0EE   051TF                                 + 01600                           A FS   076152310
+SCANP PAFAPAFH02LZ AGLOWS 010GLOWSPAEA0E  A    IF                                   05000     18000240              A-FS   076162310
+SCANP PAFAPAFH02LZ AGLOWS 020OTIZOPAPC0E  B 010TF                                 + 02600          210              A-FS   076172310
+SCANP PAFAPAFH02LZ AGLOWS 030JIRIGPAPC0E    010TF                                 + 02200                           A FS   076182310
+SCANP PAFAPAFH02LZ AGLOWS 040HONUTPAPC0EE   051TF                                 + 01600                           A FS   076192310
+SCANP PAFAPAFH02LZ AKRIIS 010KRIISPAPC0E  A    IF                                 + 05000     18000                 A FS   076202310
+SCANP PAFAPAFH02LZ AKRIIS 020OFJENPAPC0E  B 010TF                                 + 04500          210              A-FS   076212310
+SCANP PAFAPAFH02LZ AKRIIS 030WERDUPAPC0E    010TF                                 + 03800                           A FS   076222108
+SCANP PAFAPAFH02LZ AKRIIS 040JIRIGPAPC0E   R010RF       0024502608    02290052    + 02200                 CFPPR PAPCA FS   076232108
+SCANP PAFAPAFH02LZ AKRIIS 050HONUTPAPC0EE   051TF                                 + 01600                           A FS   076242310
+SCANP PAFAPAFH02LZ H      020HONUTPAPC1E  F    IF                                 + 01600                 RW02L PAPGA FS   076252310
+SCANP PAFAPAFH02LZ H      020HONUTPAPC2W                                                A031A011                      FS   076262310
+SCANP PAFAPAFH02LZ H      030RW02LPAPG0GY M 031TF                                   00492             -300          A FS   076271707
+SCANP PAFAPAFH02LZ H      040USAZYPAPC0E M  010TF                                                                   A FS   076281310
+SCANP PAFAPAFH02LZ H      050ODIFUPAPC0E   R010RF       0038000231    18400107                            CFFMZ PAPCA FS   076292310
+SCANP PAFAPAFH02LZ H      060KRNKLPAEA0EY   010TF                                 + 05000                           A FS   076301210
+SCANP PAFAPAFH02LZ H      070KRNKLPAEA0EE  R   HM                     29270040    + 05000                           A FS   076312108
+SUSAP KMSOK1AMSO     0     095YHN46545870W114052600E013003206         1800018000C    MNAR    MISSOULA MONTANA              650212112
+SUSAP KMSOK1FI12-Y AEMIBE 010EMIBEK1EA0E  A    IF                                             18000                 0 DS   651682408
+SUSAP KMSOK1FI12-Y AEMIBE 020NEGOEK1PC0EE BL   AF MSO K1      297802503443    D   + 10500                           0 DS   651691806
+SUSAP KMSOK1FI12-Y AJIROS 010JIROSK1EA0E  A    IF                                             18000                 0 DS   651702408
+SUSAP KMSOK1FI12-Y AJIROS 020DIPHUK1EA0E   R   AF MSO K1      262002502427    D   + 12000                           0 DS   651711806
+SUSAP KMSOK1FI12-Y AJIROS 030NEGOEK1PC0EE BR   AF MSO K1      297802502620    D   + 10500                           0 DS   651721806
+SUSAP KMSOK1FI12-Y AMLP   010MLP  K1D 0V  A    FC MLP K1      0000000009500459D   + 10500     18000                 0 DS   651731806
+SUSAP KMSOK1FI12-Y AMLP   020NEGOEK1PC0EE B    CF IMSOK1      2975025409500020PI  + 10500                           0 DS   651741806
+SUSAP KMSOK1FI12-Y I      010NEGOEK1PC0E  I    IF IMSOK1      29750254        PI  J 105000860018000                 0 DS   651751806
+SUSAP KMSOK1FI12-Y I      020JELEGK1PC0E  F    CF IMSOK1      2975017811700075PI  H 0860008600            MSO   K1D 0 DS   651762107
+SUSAP KMSOK1FI12-Y I      030RW12 K1PG0GY M    CF IMSOK1      2975001711700161PI    03237             -300          0 DS   651771806
+SUSAP KMSOK1FI12-Y I      040         0  M     CA                     1175        + 06200                           0 DS   651781806
+SUSAP KMSOK1FI12-Y I      050MSO  K1D 0V       FA MSO K1      000000001540    D   + 08500                           0 DS   651791806
+SUSAP KMSOK1FI12-Y I      060MSO  K1D 0VY  L   DF                                 + 09100                           0 DS   651801806
+SUSAP KMSOK1FI12-Y I      070MSO  K1D 0VE  R   HM                     3440T010    + 09100                           0 DS   651811806
+SUSAP KMSOK1FR12-Y ACHARL 010CHARLK1EA0E       IF                                             18000                 A JS   651951806
+SUSAP KMSOK1FR12-Y ACHARL 020ODIREK1PC0EY   020TF                                 + 09400                           A JS   651962408
+SUSAP KMSOK1FR12-Y ACHARL 030ODIREK1PC0EE AR   HF                     11720070    + 09400                           A JS   651972408
+SUSAP KMSOK1FR12-Y AJENKI 010JENKIK1EA0E       IF                                             18000                 A JS   651981806
+SUSAP KMSOK1FR12-Y AJENKI 020EHRAYK1PC0E    020TF                                 + 11800                           A JS   651992408
+SUSAP KMSOK1FR12-Y AJENKI 030RIVALK1EA0E    020TF                                 + 09500                           A JS   652002408
+SUSAP KMSOK1FR12-Y AJENKI 040LANNYK1PC0E  A 020TF                                 + 09400                           A JS   652012408
+SUSAP KMSOK1FR12-Y AJENKI 050ODIREK1PC0EE B 010TF                                 + 09400                           A JS   652022408
+SUSAP KMSOK1FR12-Y R      010ODIREK1PC0E  I    IF                                 + 09400     18000                 A JS   652031806
+SUSAP KMSOK1FR12-Y R      011CALIPK1PC0E    010TF                                 + 07000                           A JS   652042408
+SUSAP KMSOK1FR12-Y R      020SUPPYK1PC1E  F 010TF                                 + 06200                 RW12  K1PGA JS   652052408
+SUSAP KMSOK1FR12-Y R      020SUPPYK1PC2WALPV       N          ALNAV                                                   JS   652061806
+SUSAP KMSOK1FR12-Y R      021BEGPEK1PC0E S  031TF                                 V 0484004840        -300          A JS   652072408
+SUSAP KMSOK1FR12-Y R      030RW12 K1PG0GY M 031TF                                   03247             -300          A JS   652082408
+SUSAP KMSOK1FR12-Y R      040         0  M     CA                     1173        + 03400                           A JS   652091806
+SUSAP KMSOK1FR12-Y R      050CINONK1PC0E    010DF                                                  200              A-JS   652101806
+SUSAP KMSOK1FR12-Y R      060TUSEEK1PC0E    010TF                                                                   A JS   652112408
+SUSAP KMSOK1FR12-Y R      070JENKIK1EA0EY   010TF                                 + 12000                           A JS   652122408
+SUSAP KMSOK1FR12-Y R      080JENKIK1EA0EE  R   HM                     16700070    + 12000                           A JS   652131806

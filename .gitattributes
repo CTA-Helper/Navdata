@@ -1,0 +1,4 @@
+# The CIFP is a fixed-width format published with CRLF line endings. Keep the test
+# fixture byte-identical to the file the FAA ships.
+tests/fixtures/FAACIFP18 -text
+tests/fixtures/*.pdf binary
