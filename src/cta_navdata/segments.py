@@ -85,15 +85,21 @@ class ClassifiedLeg:
 
     @property
     def is_correctable(self) -> bool:
-        """Whether ENR 1.8 5.b applies a correction to this leg's published altitude.
+        """Whether ENR 1.8 applies a correction to this leg's published altitude.
 
-        The runway threshold crossing altitude coded at the missed approach point is derived
-        from the threshold crossing height, not a published procedure altitude, so it is left
-        alone.
+        Two altitudes are published but never corrected. The runway threshold crossing
+        altitude coded at the missed approach point is derived from the threshold crossing
+        height rather than published as a procedure altitude. And in the missed approach the
+        correction is added "to the final MA altitude only" (ENR 1.8 5.f.2.1.4), so the climb
+        and intermediate altitudes along the missed approach are left as published.
         """
         if self.leg.altitude is None:
             return False
-        return not (self.role is Role.MAP and _is_runway(self.leg))
+        if self.role is Role.MAP and _is_runway(self.leg):
+            return False
+        if self.segment is Segment.MISSED:
+            return self.role is Role.MISSED_HOLDING
+        return True
 
 
 @dataclass(frozen=True)

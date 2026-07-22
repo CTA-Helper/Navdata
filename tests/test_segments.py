@@ -76,6 +76,15 @@ class TestMissoulaRnavY12:
         # JENKI 12000 -> 12500 in the example.
         assert [(leg.leg.identifier, leg.leg.altitude) for leg in holding] == [("JENKI", 12000)]
 
+    def test_only_the_final_missed_altitude_is_corrected(self, data):
+        """ENR 1.8 5.f.2.1.4 adds the missed correction to the final MA altitude only.
+
+        The climb-to altitude of 3400 ft on the way to JENKI is published but not corrected.
+        """
+        classified = segments.classify(approach(data, "KMSO", "R12-Y"))
+
+        assert altitudes(classified, Segment.MISSED) == {"JENKI": 12000}
+
     def test_roles_are_resolved_from_the_waypoint_description_code(self, data):
         roles = {
             (leg.leg.transition, leg.leg.identifier): leg.role

@@ -74,8 +74,15 @@ altitude, so it still applies.
 ### What is not corrected
 
 SID, ODP and STAR altitudes are never corrected (ENR 1.8 5.c), so departures and
-arrivals are not in this file. Neither is the runway threshold crossing altitude
-coded at the missed approach point, which is not a published procedure altitude.
+arrivals are not in this file. Two published altitudes that do appear are also
+never corrected, and are marked `"correctable": false`:
+
+- the runway threshold crossing altitude coded at the missed approach point,
+  which is derived from the threshold crossing height rather than published as a
+  procedure altitude
+- the climb and intermediate altitudes along the missed approach, since the
+  missed correction is added to the final holding altitude only
+  (ENR 1.8 5.f.2.1.4)
 
 ## Distribution
 
