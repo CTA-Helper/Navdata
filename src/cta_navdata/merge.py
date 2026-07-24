@@ -9,7 +9,7 @@ from .airac import Cycle
 from .cifp import CIFP, Airport, Approach
 from .cold_temp import ColdTemperatureAirport, ColdTemperatureList
 from .download import Source, Sources
-from .dtpp import Chart
+from .dtpp import Chart, Location
 from .segments import ClassifiedLeg, Reference
 
 
@@ -18,6 +18,7 @@ def build(
     data: CIFP,
     cold_temperature: ColdTemperatureList,
     charts: dict[str, dict[str, Chart]],
+    locations: dict[str, Location],
     sources: Sources,
 ) -> dict:
     """Build the combined document for ``cycle``."""
@@ -31,6 +32,7 @@ def build(
             data.approaches.get(identifier, []),
             restrictions.get(identifier),
             charts.get(identifier, {}),
+            locations.get(identifier),
         )
         for identifier, airport in sorted(data.airports.items())
         if identifier in data.approaches or identifier in restrictions
@@ -91,11 +93,17 @@ def _airport(
     approaches: list[Approach],
     restriction: ColdTemperatureAirport | None,
     charts: dict[str, Chart],
+    location: Location | None,
 ) -> dict:
     return {
         "icaoIdentifier": airport.icao_identifier,
         "faaIdentifier": airport.faa_identifier,
-        "name": airport.name,
+        # CIFP names are upper-cased and truncated to 30 characters, so prefer the d-TPP's
+        # fuller name when it published one.
+        "name": location.name if location else airport.name,
+        "city": location.city if location else None,
+        "state": location.state if location else None,
+        "stateName": location.state_name if location else None,
         "elevation": airport.elevation,
         "latitude": airport.latitude,
         "longitude": airport.longitude,

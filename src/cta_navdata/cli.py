@@ -59,8 +59,9 @@ def _generate(cycle: Cycle, cache: Path) -> tuple[dict, set[str]]:
 
     print("Reading d-TPP chart index...", file=sys.stderr)
     charts = dtpp.read(sources.dtpp.path, cycle)
+    locations = dtpp.locations(sources.dtpp.path)
 
-    document = merge.build(cycle, data, restrictions, charts, sources)
+    document = merge.build(cycle, data, restrictions, charts, locations, sources)
     return document, {airport.identifier for airport in restrictions.airports}
 
 

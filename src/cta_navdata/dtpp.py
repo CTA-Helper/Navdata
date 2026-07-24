@@ -74,6 +74,20 @@ class Chart:
     url: str
 
 
+@dataclass(frozen=True)
+class Location:
+    """An airport's place, as the d-TPP names it.
+
+    CIFP airport names are upper-cased and truncated to 30 characters and carry no city or
+    state, so this is the only source that lets a pilot find an airport by where it is.
+    """
+
+    name: str
+    city: str
+    state: str
+    state_name: str
+
+
 def read(path: Path, cycle: Cycle) -> dict[str, dict[str, Chart]]:
     """Map each airport's ICAO identifier to its approach charts, keyed by matching key."""
     charts: dict[str, dict[str, Chart]] = {}
@@ -84,6 +98,27 @@ def read(path: Path, cycle: Cycle) -> dict[str, dict[str, Chart]]:
         if indexed := _index(airport, cycle):
             charts[identifier] = indexed
     return charts
+
+
+def locations(path: Path) -> dict[str, Location]:
+    """Map each airport's ICAO identifier to its place, read from the metafile's hierarchy."""
+    places: dict[str, Location] = {}
+    for state in ElementTree.parse(path).getroot().iter("state_code"):
+        state_code = state.get("ID") or ""
+        state_name = state.get("state_fullname") or ""
+        for city in state.iter("city_name"):
+            city_name = city.get("ID") or ""
+            for airport in city.iter("airport_name"):
+                identifier = airport.get("icao_ident") or airport.get("apt_ident")
+                if not identifier:
+                    continue
+                places[identifier] = Location(
+                    name=airport.get("ID") or "",
+                    city=city_name,
+                    state=state_code,
+                    state_name=state_name,
+                )
+    return places
 
 
 def chart_for(procedure: str, charts: dict[str, Chart]) -> Chart | None:
