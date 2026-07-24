@@ -10,12 +10,14 @@ from .cifp import CIFP, Airport, Approach
 from .cold_temp import ColdTemperatureAirport, ColdTemperatureList
 from .download import Source, Sources
 from .dtpp import Chart, Location
+from .nasr import AirportRecord
 from .segments import ClassifiedLeg, Reference
 
 
 def build(
     cycle: Cycle,
     data: CIFP,
+    facilities: dict[str, AirportRecord],
     cold_temperature: ColdTemperatureList,
     charts: dict[str, dict[str, Chart]],
     locations: dict[str, Location],
@@ -29,6 +31,7 @@ def build(
     airports = [
         _airport(
             airport,
+            facilities.get(airport.faa_identifier),
             data.approaches.get(identifier, []),
             restrictions.get(identifier),
             charts.get(identifier, {}),
@@ -56,6 +59,7 @@ def _meta(
         "cycleExpires": cycle.expires.isoformat(),
         "sources": {
             "cifp": _source(sources.cifp),
+            "nasr": _source(sources.nasr),
             "dtpp": _source(sources.dtpp),
             "coldTemperatureAirports": _source(sources.cold_temperature),
         },
@@ -90,14 +94,21 @@ def _source(source: Source) -> dict:
 
 def _airport(
     airport: Airport,
+    facility: AirportRecord | None,
     approaches: list[Approach],
     restriction: ColdTemperatureAirport | None,
     charts: dict[str, Chart],
     location: Location | None,
 ) -> dict:
     return {
-        "icaoIdentifier": airport.icao_identifier,
+        # The site number is the airport's identity; the codes below all name it only for as
+        # long as the FAA leaves them alone. An unmatched airport carries none, which
+        # ``validate`` rejects rather than publishing an airport nothing can be pinned to.
+        "siteNumber": facility.site_number if facility else None,
         "faaIdentifier": airport.faa_identifier,
+        # NASR publishes the ICAO code in a column of its own, so it can say an airport has
+        # none. The CIFP has one identifier field holding whichever code exists, which cannot.
+        "icaoIdentifier": facility.icao_identifier if facility else None,
         # CIFP names are upper-cased and truncated to 30 characters, so prefer the d-TPP's
         # fuller name when it published one.
         "name": location.name if location else airport.name,

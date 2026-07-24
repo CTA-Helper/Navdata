@@ -13,6 +13,13 @@ _ANCHOR = date(2026, 7, 9)
 
 COLD_TEMPERATURE_AIRPORTS_URL = "https://aeronav.faa.gov/d-tpp/Cold_Temp_Airports.pdf"
 
+# NASR names its subscription after the effective date in English, which `%b` would render in
+# whatever locale the generator happens to run under.
+_MONTH_ABBREVIATIONS = (
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+)  # fmt: skip
+
 
 @dataclass(frozen=True, order=True)
 class Cycle:
@@ -48,6 +55,15 @@ class Cycle:
     def cifp_url(self) -> str:
         """The CIFP zip for this cycle. The FAA retains roughly six cycles."""
         return f"https://aeronav.faa.gov/Upload_313-d/cifp/CIFP_{self.effective:%y%m%d}.zip"
+
+    @property
+    def nasr_url(self) -> str:
+        """The NASR subscription zip for this cycle, in its CSV form."""
+        month = _MONTH_ABBREVIATIONS[self.effective.month - 1]
+        return (
+            "https://nfdc.faa.gov/webContent/28DaySub/extra/"
+            f"{self.effective.day:02d}_{month}_{self.effective.year}_CSV.zip"
+        )
 
     @property
     def dtpp_metafile_url(self) -> str:

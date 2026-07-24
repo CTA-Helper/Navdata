@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import airac, cifp, cold_temp, dtpp, merge, validate
+from . import airac, cifp, cold_temp, dtpp, merge, nasr, validate
 from .airac import Cycle
 from .download import fetch_all
 from .validate import ValidationError
@@ -54,6 +54,9 @@ def _generate(cycle: Cycle, cache: Path) -> tuple[dict, set[str]]:
     print("Parsing CIFP...", file=sys.stderr)
     data = cifp.read(sources.cifp.path)
 
+    print("Reading NASR airports...", file=sys.stderr)
+    facilities = nasr.read(sources.nasr.path)
+
     print("Scraping cold temperature airports...", file=sys.stderr)
     restrictions = cold_temp.scrape(sources.cold_temperature.path)
 
@@ -61,7 +64,7 @@ def _generate(cycle: Cycle, cache: Path) -> tuple[dict, set[str]]:
     charts = dtpp.read(sources.dtpp.path, cycle)
     locations = dtpp.locations(sources.dtpp.path)
 
-    document = merge.build(cycle, data, restrictions, charts, locations, sources)
+    document = merge.build(cycle, data, facilities, restrictions, charts, locations, sources)
     return document, {airport.identifier for airport in restrictions.airports}
 
 

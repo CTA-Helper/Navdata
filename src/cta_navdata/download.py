@@ -12,6 +12,7 @@ import httpx
 from .airac import COLD_TEMPERATURE_AIRPORTS_URL, Cycle
 
 _CIFP_MEMBER = "FAACIFP18"
+_NASR_MEMBER = "APT_BASE.csv"
 _TIMEOUT = httpx.Timeout(30.0, read=300.0)
 
 # aeronav.faa.gov rejects the default httpx user agent.
@@ -30,6 +31,7 @@ class Source:
 @dataclass(frozen=True)
 class Sources:
     cifp: Source
+    nasr: Source
     dtpp: Source
     cold_temperature: Source
 
@@ -39,6 +41,7 @@ def fetch_all(cycle: Cycle, cache: Path) -> Sources:
     cache.mkdir(parents=True, exist_ok=True)
     return Sources(
         cifp=_fetch_cifp(cycle, cache),
+        nasr=_fetch_nasr(cycle, cache),
         dtpp=fetch(cycle.dtpp_metafile_url, cache / f"d-TPP_{cycle.identifier}.xml"),
         cold_temperature=fetch(COLD_TEMPERATURE_AIRPORTS_URL, cache / "Cold_Temp_Airports.pdf"),
     )
@@ -54,11 +57,25 @@ def fetch(url: str, destination: Path) -> Source:
 def _fetch_cifp(cycle: Cycle, cache: Path) -> Source:
     """Download the CIFP zip and extract the single ARINC 424 file it contains."""
     archive = cache / f"CIFP_{cycle.effective:%y%m%d}.zip"
-    source = fetch(cycle.cifp_url, archive)
-    extracted = cache / f"{_CIFP_MEMBER}_{cycle.identifier}"
+    return _fetch_member(cycle.cifp_url, archive, _CIFP_MEMBER, cache / f"{_CIFP_MEMBER}_{cycle.identifier}")
+
+
+def _fetch_nasr(cycle: Cycle, cache: Path) -> Source:
+    """Download the NASR subscription and extract the airport file, the only member read.
+
+    The subscription carries every NASR record type at around 22 MB; ``APT_BASE.csv`` is the
+    one holding the site number and codes each airport is published under.
+    """
+    archive = cache / f"NASR_{cycle.effective:%y%m%d}.zip"
+    return _fetch_member(cycle.nasr_url, archive, _NASR_MEMBER, cache / f"{_NASR_MEMBER}_{cycle.identifier}")
+
+
+def _fetch_member(url: str, archive: Path, member: str, extracted: Path) -> Source:
+    """Download a zip and extract one member from it, reusing whatever is already cached."""
+    source = fetch(url, archive)
     if not extracted.exists():
         with zipfile.ZipFile(archive) as zipped:
-            extracted.write_bytes(zipped.read(_CIFP_MEMBER))
+            extracted.write_bytes(zipped.read(member))
     return Source(url=source.url, path=extracted, retrieved_at=source.retrieved_at)
 
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from cta_navdata import cifp, cold_temp
+from cta_navdata import cifp, cold_temp, nasr
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -11,6 +11,12 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def data() -> cifp.CIFP:
     """A CIFP excerpt holding KMSO, PABE and PAFA."""
     return cifp.read(FIXTURES / "FAACIFP18")
+
+
+@pytest.fixture(scope="session")
+def facilities() -> dict[str, nasr.AirportRecord]:
+    """The NASR rows for the airports the CIFP excerpt covers, plus one holding no ICAO code."""
+    return nasr.read(FIXTURES / "APT_BASE.csv")
 
 
 @pytest.fixture(scope="session")

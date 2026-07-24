@@ -7,6 +7,7 @@ good cycle rather than shipping something silently wrong.
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date
 
 # A handful of procedures legitimately code no intermediate fix, but a FAF, a missed approach
@@ -25,6 +26,15 @@ class ValidationError(Exception):
     """A gate failed. The message is written verbatim into the notification issue."""
 
 
+def _identifier(airport: dict) -> str:
+    """Name an airport the way the FAA's published lists do: by ICAO code, or by location id.
+
+    Only about three quarters of the airports here hold an ICAO code, so this is what a
+    failure message must quote for a pilot to recognise which airport it means.
+    """
+    return airport["icaoIdentifier"] or airport["faaIdentifier"]
+
+
 def check(
     document: dict,
     cold_temperature_identifiers: set[str],
@@ -36,6 +46,7 @@ def check(
     dropped on the way into the document is caught rather than quietly reducing the count.
     """
     _check_minimum_counts(document)
+    _check_site_numbers(document)
     _check_cold_temperature_validity(document)
     _check_cold_temperature_airports_present(document, cold_temperature_identifiers)
     _check_cold_temperature_airports_resolve(document)
@@ -66,9 +77,27 @@ def _check_cold_temperature_validity(document: dict) -> None:
         )
 
 
+def _check_site_numbers(document: dict) -> None:
+    """Every airport must carry the site number that identifies it across a code change.
+
+    An airport NASR did not match has none, and would be one a saved favorite could only be
+    pinned to by a code the FAA may reassign — so the cycle is rejected instead.
+    """
+    airports = document["airports"]
+    if unmatched := [_identifier(airport) for airport in airports if not airport["siteNumber"]]:
+        raise ValidationError(
+            f"{len(unmatched)} airport(s) matched no NASR record, so they carry no site number: "
+            f"{sorted(unmatched)}"
+        )
+
+    counts = Counter(airport["siteNumber"] for airport in airports)
+    if shared := sorted(number for number, count in counts.items() if count > 1):
+        raise ValidationError(f"{len(shared)} site number(s) identify more than one airport: {shared}")
+
+
 def _check_cold_temperature_airports_present(document: dict, expected: set[str]) -> None:
     """Every airport the CTA list names must survive into the document."""
-    present = {airport["icaoIdentifier"] for airport in document["airports"] if airport["coldTemperature"]}
+    present = {_identifier(airport) for airport in document["airports"] if airport["coldTemperature"]}
     if missing := expected - present:
         raise ValidationError(
             f"{len(missing)} airport(s) on the cold temperature list are absent from the output: "
@@ -79,7 +108,7 @@ def _check_cold_temperature_airports_present(document: dict, expected: set[str])
 def _check_cold_temperature_airports_resolve(document: dict) -> None:
     """Every CTA must be an airport in the output, or the app cannot find its elevation."""
     unresolved = [
-        airport["icaoIdentifier"]
+        _identifier(airport)
         for airport in document["airports"]
         if airport["coldTemperature"] and airport["elevation"] is None
     ]
