@@ -230,7 +230,12 @@ def _centre(word: dict) -> float:
 
 
 def _day(text: str) -> date:
-    return datetime.strptime(text, "%d %b %Y").date()
+    """Read one of the validity dates the list prints, e.g. ``02 Oct 2025``.
+
+    The date carries no time of day and so no zone, and is narrowed to a ``date`` here before
+    anything can read one into it.
+    """
+    return datetime.strptime(text, "%d %b %Y").date()  # noqa: DTZ007
 
 
 def _tally(segments: list[str]) -> dict[str, int]:

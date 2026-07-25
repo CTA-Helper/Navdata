@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 CYCLE_LENGTH = timedelta(days=28)
 
@@ -87,7 +87,12 @@ def containing(day: date) -> Cycle:
 
 
 def current(today: date | None = None) -> Cycle:
-    return containing(today or date.today())
+    """The cycle in effect now, reckoned in UTC because a cycle takes effect at 0901Z.
+
+    Reckoning locally would roll the cycle over at the generator's midnight rather than the
+    FAA's, resolving the wrong one for those hours either side of it.
+    """
+    return containing(today or datetime.now(UTC).date())
 
 
 def resolve(selector: str, today: date | None = None) -> Cycle:
