@@ -40,13 +40,24 @@ def _record(row: dict[str, str]) -> AirportRecord:
     return AirportRecord(
         # The type code distinguishes the airport from the heliport or seaplane base that may
         # share its number, and completes the key NASR files the facility under.
-        site_number=_text(row["SITE_NO"]) + _text(row["SITE_TYPE_CODE"]),
+        site_number=_site_number(row["SITE_NO"]) + _text(row["SITE_TYPE_CODE"]),
         faa_identifier=_text(row["ARPT_ID"]),
         icao_identifier=_optional(row["ICAO_ID"]),
         city=_optional(row["CITY"]),
         state=_optional(row["STATE_CODE"]),
         state_name=_optional(row["STATE_NAME"]),
     )
+
+
+def _site_number(value: str) -> str:
+    """Read the number the facility is filed under, dropping the separator some renderings carry.
+
+    FAA Form 5010 writes the type code onto the end of the number behind an asterisk, giving
+    ``03555.*A``. The CSV subscription splits the two into columns and so publishes no asterisk,
+    but one arriving here would silently rekey every airport, which the app persists in favorites
+    and could not undo — so it is normalized out rather than trusted to stay absent.
+    """
+    return _text(value).replace("*", "")
 
 
 def _text(value: str) -> str:

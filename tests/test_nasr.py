@@ -16,6 +16,10 @@ class TestRead:
         """The FAA inserts fractionally rather than renumbering, so the key is not an integer."""
         assert facilities["BET"].site_number == "50061.1A"
 
+    def test_drops_the_asterisk_form_5010_separates_the_type_code_with(self, facilities):
+        """An asterisk left in would rekey the airport, and the app cannot undo a rekeyed favorite."""
+        assert facilities["FAI"].site_number == "50219.A"
+
     def test_reads_the_icao_code_when_one_is_published(self, facilities):
         assert facilities["MSO"].icao_identifier == "KMSO"
 
