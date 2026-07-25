@@ -7,8 +7,14 @@ good cycle rather than shipping something silently wrong.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from datetime import date
+
+# The form of a site number: five digits, then the sequence the FAA inserts a new facility with,
+# then the facility type letter — `03555.A`, or `00218.12A` for one inserted later. The app keys
+# favorites on this string, so a change in shape is a change to the primary key and is rejected.
+SITE_NUMBER = re.compile(r"\d{5}\.\d*[A-Z]")
 
 # A handful of procedures legitimately code no intermediate fix, but a FAF, a missed approach
 # point and a missed holding altitude are present in every approach the FAA publishes. A drop
@@ -20,6 +26,14 @@ MAXIMUM_COUNT_DRIFT = 0.20
 
 # Floors that catch a source truncated or half-downloaded.
 MINIMUM_COUNTS = {"airports": 1000, "approaches": 5000, "coldTemperatureAirports": 50}
+
+# The identifiers no two airports may share, and how to name one in a failure. Only the site
+# number is present on every airport; the codes are checked where they appear.
+_UNIQUE_IDENTIFIERS = {
+    "siteNumber": "site number(s)",
+    "faaIdentifier": "FAA identifier(s)",
+    "icaoIdentifier": "ICAO code(s)",
+}
 
 
 class ValidationError(Exception):
@@ -90,9 +104,19 @@ def _check_site_numbers(document: dict) -> None:
             f"{sorted(unmatched)}"
         )
 
-    counts = Counter(airport["siteNumber"] for airport in airports)
-    if shared := sorted(number for number, count in counts.items() if count > 1):
-        raise ValidationError(f"{len(shared)} site number(s) identify more than one airport: {shared}")
+    if malformed := sorted(
+        airport["siteNumber"] for airport in airports if not SITE_NUMBER.fullmatch(airport["siteNumber"])
+    ):
+        raise ValidationError(f"{len(malformed)} site number(s) are not of the form 03555.A: {malformed}")
+
+    # Each identifier is unique across every US landing facility, not merely across the
+    # airports carrying procedures, so a repeat means two records were conflated upstream.
+    # The app keys on all three, and resolves a duplicate by silently merging the airports,
+    # which would cost one of them its approaches — so the cycle is rejected here instead.
+    for field, description in _UNIQUE_IDENTIFIERS.items():
+        counts = Counter(airport[field] for airport in airports if airport[field])
+        if shared := sorted(value for value, count in counts.items() if count > 1):
+            raise ValidationError(f"{len(shared)} {description} identify more than one airport: {shared}")
 
 
 def _check_cold_temperature_airports_present(document: dict, expected: set[str]) -> None:
