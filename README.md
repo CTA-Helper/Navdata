@@ -4,7 +4,7 @@ Builds the navigation database behind [CTA Helper](../CTA%20Helper), an app that
 applies the cold temperature altitude corrections described in
 [AIP ENR 1.8](https://www.faa.gov/air_traffic/publications/atpubs/aip_html/part2_enr_section_1.8.html).
 
-For a given AIRAC cycle the generator downloads three FAA sources, merges them,
+For a given AIRAC cycle the generator downloads four FAA sources, merges them,
 and writes a single JSON document that is published as a GitHub Release asset.
 
 | Source | What it provides |
@@ -12,6 +12,30 @@ and writes a single JSON document that is published as a GitHub Release asset.
 | [CIFP](https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/cifp/) | Airport elevations, and every approach procedure's fixes and published altitudes (ARINC 424-18) |
 | [Cold Temperature Airports](https://aeronav.faa.gov/d-tpp/Cold_Temp_Airports.pdf) | The restriction temperature and affected segments for each CTA |
 | [d-TPP metafile](https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/dtpp/) | Official approach names and approach plate URLs |
+| [NASR subscription](https://nfdc.faa.gov/xwiki/bin/view/NFDC/28+Day+NASR+Subscription) | Each airport's site number, ICAO code, and associated city and state |
+
+## Identifying an airport
+
+Every code an airport goes by is reassigned from time to time — in cycle 2607
+Palm Beach became `DJT`/`KDJT`, taking its location identifier, its ICAO code
+and its name with it. So each airport is published with the `siteNumber` that
+FAA Form 5010 files the facility under, which does not move, and which is the
+only identifier a saved favorite can safely be pinned to.
+
+A site number takes the form `03555.A`: five digits, the sequence number the FAA
+inserts a new facility with rather than renumbering its neighbours, and the
+facility type letter. About a third are numbered fractionally, like `00218.12A`,
+so the sequence is part of the identifier and not decoration.
+
+`icaoIdentifier` is null for the roughly one airport in four holding no ICAO
+code, rather than echoing the FAA identifier — a consumer deriving a METAR
+station id needs to know that `00R` has no ICAO code so that it asks for `K00R`.
+
+`city`, `state` and `stateName` come from NASR, which is the only source that
+gives the two-letter postal code for airports outside the states: the d-TPP
+files all of them under a placeholder `XX`. The six airports in the freely
+associated states — Majuro, Chuuk, Pohnpei, Koror, Kosrae and Yap — have no
+postal code in any source, so theirs are null.
 
 ## Usage
 

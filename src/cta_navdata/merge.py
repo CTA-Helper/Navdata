@@ -112,9 +112,14 @@ def _airport(
         # CIFP names are upper-cased and truncated to 30 characters, so prefer the d-TPP's
         # fuller name when it published one.
         "name": location.name if location else airport.name,
-        "city": location.city if location else None,
-        "state": location.state if location else None,
-        "stateName": location.state_name if location else None,
+        # NASR is the authority on where an airport is. The d-TPP files everything outside the
+        # states under a placeholder state of `XX` named "PACIFIC TERRITORIES", so taking the
+        # postal code from it would publish a code that is not one; NASR names Guam GU, American
+        # Samoa AS and the Marianas MP. Its city is filled in for every airport here, and the
+        # d-TPP's stands in should that ever stop being true.
+        "city": _city(facility, location),
+        "state": facility.state if facility else None,
+        "stateName": facility.state_name if facility else None,
         "elevation": airport.elevation,
         "latitude": airport.latitude,
         "longitude": airport.longitude,
@@ -123,6 +128,12 @@ def _airport(
             _approach(approach, charts) for approach in sorted(approaches, key=lambda a: a.identifier)
         ],
     }
+
+
+def _city(facility: AirportRecord | None, location: Location | None) -> str | None:
+    """The city the airport is associated with, which the app's airport search matches on."""
+    from_nasr = facility.city if facility else None
+    return from_nasr or (location.city if location else None)
 
 
 def _cold_temperature(restriction: ColdTemperatureAirport | None) -> dict | None:
