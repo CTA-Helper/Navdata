@@ -100,46 +100,55 @@ jobs:
             --notes "Cold temperature altitude correction data for the AIRAC cycle taking effect $TAG."
 
       - name: Collect diagnostics
-        if: failure() && steps.decide.outputs.publish == 'true'
+        if: failure()
         run: |
           mkdir -p diagnostics
           cp generation.log diagnostics/ 2>/dev/null || true
           cp .cache/Cold_Temp_Airports.pdf diagnostics/ 2>/dev/null || true
 
       - name: Upload diagnostics
-        if: failure() && steps.decide.outputs.publish == 'true'
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: diagnostics-${{ steps.cycle.outputs.tag }}
+          # The cycle is unresolved when the run fails before the step that reckons it.
+          name: diagnostics-${{ steps.cycle.outputs.tag || github.run_id }}
           path: diagnostics
           if-no-files-found: ignore
 
       - name: Report failure
-        if: failure() && steps.decide.outputs.publish == 'true'
+        if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          # gh reads the repository from the checkout, which a failure this step reports
+          # may have been what failed.
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.cycle.outputs.tag }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          title="Nav data generation failed for cycle $TAG"
+          # Both titles are fixed strings, so every failure of a kind lands on one issue.
+          title="${TAG:+Nav data generation failed for cycle $TAG}"
+          title="${title:-Nav data publish run failed before a cycle was resolved}"
+          summary="${TAG:+Generation for the cycle taking effect **$TAG** failed}"
+          summary="${summary:-The run failed before a target cycle was resolved}"
 
           # The log is written to a file rather than interpolated, so nothing in it can be
           # read as shell.
           {
-            echo "Generation for the cycle taking effect **$TAG** failed, so no release was"
-            echo "published. Consumers stay on the previous cycle until this is fixed."
+            echo "$summary, so no release was published. Consumers stay on the previous"
+            echo "cycle until this is fixed."
             echo
-            echo "[View the run]($RUN_URL) — the diagnostics artifact holds the log and the"
-            echo "cold temperature PDF as downloaded."
+            echo "[View the run]($RUN_URL) — the diagnostics artifact, where the run got far"
+            echo "enough to produce one, holds the log and the cold temperature PDF as"
+            echo "downloaded."
             echo
             echo '```'
             tail -c 8000 generation.log 2>/dev/null || echo "No generation log was produced."
             echo '```'
           } > issue-body.md
 
-          existing="$(gh issue list --state open --search "$title in:title" \
-            --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")"
+          existing="$(TITLE="$title" gh issue list --state open --search "$title in:title" \
+            --json number,title --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')"
 
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body-file issue-body.md
