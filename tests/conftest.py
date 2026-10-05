@@ -25,5 +25,11 @@ def cold_temperature_list() -> cold_temp.ColdTemperatureList:
     return cold_temp.scrape(FIXTURES / "Cold_Temp_Airports.pdf")
 
 
+@pytest.fixture(scope="session")
+def open_ended_cold_temperature_list() -> cold_temp.ColdTemperatureList:
+    """Pages 1 and 6–8 of the 04 September 2026 edition, which prints no end date."""
+    return cold_temp.scrape(FIXTURES / "Cold_Temp_Airports_2026-09-04.pdf")
+
+
 def approach(data: cifp.CIFP, airport: str, identifier: str) -> cifp.Approach:
     return next(a for a in data.approaches[airport] if a.identifier == identifier)

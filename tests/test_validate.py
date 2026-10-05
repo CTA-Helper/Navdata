@@ -143,6 +143,10 @@ def test_an_expired_cold_temperature_list_is_rejected():
         validate.check(document(cold_temperature_valid_to="2026-06-30"), {"KMSO"})
 
 
+def test_a_cold_temperature_list_standing_until_superseded_is_accepted():
+    validate.check(document(cold_temperature_valid_to=None), {"KMSO"})
+
+
 def test_a_dropped_cold_temperature_airport_is_rejected():
     with pytest.raises(ValidationError, match=r"absent from the output: \['PAEI'\]"):
         validate.check(document(), {"KMSO", "PAEI"})
