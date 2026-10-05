@@ -123,6 +123,14 @@ curl -L -o cta-navdata.json.gz \
   https://github.com/CTA-Helper/Navdata/releases/latest/download/cta-navdata.json.gz
 ```
 
+This release is stage A of a two-stage pipeline. Stage B,
+[NavDataDistribution](https://github.com/CTA-Helper/NavDataDistribution), runs
+an hour after this repository's daily publish run: it builds each new release into
+the prebuilt SwiftData store CTA Helper downloads, and publishes that to R2. The
+app imports this JSON itself only when no store is published for the cycle, so
+the JSON's shape is shared with NavDataDistribution's `NavDataSchema` wire types,
+and a change to it needs a matching change there.
+
 ## Validation
 
 Scraping a PDF fails silently: if the table shifts, extraction still returns
