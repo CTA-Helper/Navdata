@@ -2,14 +2,16 @@ name: Publish Nav Data
 
 on:
   schedule:
-    # Daily, but a no-op except on the day before a cycle takes effect. The FAA posts CIFP
+    # Daily. Publishes the next cycle on the day before it takes effect: the FAA posts CIFP
     # weeks early, but the d-TPP metafile only covers the current and next cycles, so this is
-    # the earliest point at which every source for the incoming cycle is available.
+    # the earliest point at which every source for the incoming cycle is available. On any
+    # other day it publishes the current cycle if that has no release yet, so a failed run is
+    # retried daily until it succeeds.
     - cron: '0 9 * * *'
   workflow_dispatch:
     inputs:
       cycle:
-        description: 'Cycle to build: current, next, or YYYY-MM-DD. Blank = next.'
+        description: 'Cycle to build: current, next, or YYYY-MM-DD. Blank = as scheduled.'
         required: false
         default: ''
 
@@ -37,50 +39,53 @@ jobs:
       - name: Install
         run: pip install -e .
 
-      - name: Resolve target cycle
+      - name: Choose the cycle to publish
         id: cycle
         env:
+          GH_TOKEN: ${{ github.token }}
           # The dispatch input reaches the shell as an environment variable, never
           # interpolated into the command line.
           DISPATCH_CYCLE: ${{ github.event.inputs.cycle }}
         run: |
           set -euo pipefail
-          selector="${DISPATCH_CYCLE:-next}"
-          tag="$(cta-navdata --print-cycle --cycle "$selector")"
-          echo "selector=$selector" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "Target cycle $selector takes effect $tag."
-
-      - name: Decide whether to publish
-        id: decide
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DISPATCH_CYCLE: ${{ github.event.inputs.cycle }}
-          TAG: ${{ steps.cycle.outputs.tag }}
-        run: |
-          set -euo pipefail
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; nothing to do."
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ -n "$DISPATCH_CYCLE" ]; then
+            candidates=("$DISPATCH_CYCLE")
+          else
+            candidates=(next current)
           fi
           tomorrow="$(date -u -d tomorrow +%F)"
-          if [ -z "$DISPATCH_CYCLE" ] && [[ "$tomorrow" < "$TAG" ]]; then
-            echo "Cycle $TAG is more than a day out (tomorrow is $tomorrow); skipping."
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "publish=true" >> "$GITHUB_OUTPUT"
+
+          # Stops at the first released cycle: once the next cycle is out, publishing the current
+          # one would make a superseded cycle the latest release.
+          for selector in "${candidates[@]}"; do
+            tag="$(cta-navdata --print-cycle --cycle "$selector")"
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release $tag already exists."
+              break
+            elif [ -z "$DISPATCH_CYCLE" ] && [ "$selector" = next ] && [[ "$tomorrow" < "$tag" ]]; then
+              echo "Cycle $tag is more than a day out (tomorrow is $tomorrow)."
+            else
+              echo "Publishing cycle $selector, taking effect $tag."
+              {
+                echo "selector=$selector"
+                echo "tag=$tag"
+                echo "publish=true"
+              } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "Nothing to publish."
+          echo "publish=false" >> "$GITHUB_OUTPUT"
 
       - name: Fetch the previous manifest
-        if: steps.decide.outputs.publish == 'true'
+        if: steps.cycle.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         # Absent on the very first run, and its absence simply skips the drift check.
         run: gh release download --pattern manifest.json --dir previous || true
 
       - name: Generate
-        if: steps.decide.outputs.publish == 'true'
+        if: steps.cycle.outputs.publish == 'true'
         env:
           SELECTOR: ${{ steps.cycle.outputs.selector }}
         run: |
@@ -89,7 +94,7 @@ jobs:
             --previous-manifest previous/manifest.json 2>&1 | tee generation.log
 
       - name: Publish release
-        if: steps.decide.outputs.publish == 'true'
+        if: steps.cycle.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.cycle.outputs.tag }}
