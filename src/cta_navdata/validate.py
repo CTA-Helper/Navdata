@@ -77,15 +77,19 @@ def _check_minimum_counts(document: dict) -> None:
 
 
 def _check_cold_temperature_validity(document: dict) -> None:
-    """The CTA list has its own validity window, unrelated to the AIRAC cycle."""
+    """The CTA list has its own validity window, unrelated to the AIRAC cycle.
+
+    A list with no ``effectiveTo`` stands until it is superseded.
+    """
     meta = document["meta"]
     listed = meta["coldTemperatureList"]
     effective_from = date.fromisoformat(listed["effectiveFrom"])
-    effective_to = date.fromisoformat(listed["effectiveTo"])
+    effective_to = listed["effectiveTo"] and date.fromisoformat(listed["effectiveTo"])
     cycle_effective = date.fromisoformat(meta["cycleEffective"])
-    if not effective_from <= cycle_effective <= effective_to:
+    if not effective_from <= cycle_effective or (effective_to and effective_to < cycle_effective):
+        window = f"{effective_from} to {effective_to}" if effective_to else f"from {effective_from}"
         raise ValidationError(
-            f"The cold temperature list is valid {effective_from} to {effective_to}, which does "
+            f"The cold temperature list is valid {window}, which does "
             f"not cover cycle {meta['airacCycle']} effective {cycle_effective}. "
             "A newer list has probably been published."
         )

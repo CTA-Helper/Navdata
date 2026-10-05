@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import date, datetime
+from itertools import pairwise
 from pathlib import Path
 
 import pdfplumber
@@ -25,9 +26,13 @@ SEGMENT_HEADINGS = ("Initial", "Intermediate", "Final", "Missed")
 _COLUMN_TOLERANCE = 15.0
 
 _TITLE = "COLD TEMPERATURE AIRPORTS"
+# Editions print either a window (``2 Oct 2025 – 3 Sep 2026``) or only the day the list takes
+# effect (``Effective 04 September 2026``), standing until it is superseded.
 _VALIDITY = re.compile(r"(\d{1,2} \w{3} \d{4})\s*[–-]\s*(\d{1,2} \w{3} \d{4})")
+_EFFECTIVE = re.compile(r"Effective (\d{1,2} \w+ \d{4})")
 _IDENTIFIER = re.compile(r"^[A-Z0-9]{3,4}$")
-_TEMPERATURE = re.compile(r"^(-?\d+)\s*C$")
+# The column is in Celsius, and some rows print the bare number.
+_TEMPERATURE = re.compile(r"^([+-]?\d+)\s*C?$")
 
 # The note that introduces the second table on the last page. Those airfields meet the CTA
 # criteria but the procedures bind only FAA-authorised operators, not the military services.
@@ -47,14 +52,17 @@ class ColdTemperatureAirport:
 
 @dataclass(frozen=True)
 class ColdTemperatureList:
-    """The published list, with the validity window printed on its first page."""
+    """The published list, with the validity window printed on its first page.
+
+    ``effective_to`` is ``None`` for an edition that stands until it is superseded.
+    """
 
     effective_from: date
-    effective_to: date
+    effective_to: date | None
     airports: tuple[ColdTemperatureAirport, ...]
 
     def covers(self, day: date) -> bool:
-        return self.effective_from <= day <= self.effective_to
+        return self.effective_from <= day and (self.effective_to is None or day <= self.effective_to)
 
     def by_identifier(self) -> dict[str, ColdTemperatureAirport]:
         return {airport.identifier: airport for airport in self.airports}
@@ -83,7 +91,7 @@ def _read_table(page, table, military_boundary: float | None) -> list[ColdTemper
         return []
 
     military = military_boundary is not None and table.bbox[1] > military_boundary
-    rows = [_normalise(row) for row in table.extract()]
+    rows = _reattach_stray_marks([_normalise(row) for row in table.extract()])
     airports = [_airport(row, military) for row in rows if _is_airport_row(row)]
 
     _reject_unreadable_rows(rows, page)
@@ -155,6 +163,19 @@ def _reject_unreadable_rows(rows: list[list[str]], page) -> None:
         raise ValidationError(f"Cold temperature PDF page {page.page_number}: cannot read row {row}")
 
 
+def _reattach_stray_marks(rows: list[list[str]]) -> list[list[str]]:
+    """Move marks set on a state label's line down onto the airport row beneath it.
+
+    The FAA occasionally sets a row's X a line high, onto the state label above it (D55 under
+    North Dakota in the 04 September 2026 edition). Only that exact shape is repaired — a label
+    carrying marks over an airport row carrying none — so any other misplacement still fails.
+    """
+    for label, airport in pairwise(rows):
+        if _is_marked_group_row(label) and _is_unmarked_airport_row(airport):
+            airport[3:7], label[3:7] = label[3:7], airport[3:7]
+    return rows
+
+
 def _airport(row: list[str], military: bool) -> ColdTemperatureAirport:
     return ColdTemperatureAirport(
         identifier=row[0],
@@ -168,12 +189,19 @@ def _airport(row: list[str], military: bool) -> ColdTemperatureAirport:
 
 
 def _is_airport_row(row: list[str]) -> bool:
-    return (
-        len(row) >= 7
-        and bool(_IDENTIFIER.match(row[0]))
-        and bool(_TEMPERATURE.match(row[2]))
-        and any(row[3:7])
-    )
+    return _names_an_airport(row) and any(row[3:7])
+
+
+def _is_unmarked_airport_row(row: list[str]) -> bool:
+    return _names_an_airport(row) and not any(row[3:7])
+
+
+def _names_an_airport(row: list[str]) -> bool:
+    return len(row) >= 7 and bool(_IDENTIFIER.match(row[0])) and bool(_TEMPERATURE.match(row[2]))
+
+
+def _is_marked_group_row(row: list[str]) -> bool:
+    return len(row) >= 7 and bool(row[0]) and not any(row[1:3]) and any(row[3:7])
 
 
 def _is_heading_row(row: list[str]) -> bool:
@@ -185,14 +213,15 @@ def _is_group_row(row: list[str]) -> bool:
     return bool(row[0]) and not any(row[1:])
 
 
-def _validity(page) -> tuple[date, date]:
+def _validity(page) -> tuple[date, date | None]:
     text = page.extract_text() or ""
     if _TITLE not in text:
         raise ValidationError(f"Cold temperature PDF does not begin with {_TITLE!r}; the source has changed")
-    match = _VALIDITY.search(text)
-    if not match:
-        raise ValidationError("Cold temperature PDF has no readable validity date range on page 1")
-    return _day(match.group(1)), _day(match.group(2))
+    if window := _VALIDITY.search(text):
+        return _day(window.group(1)), _day(window.group(2))
+    if effective := _EFFECTIVE.search(text):
+        return _day(effective.group(1)), None
+    raise ValidationError("Cold temperature PDF has no readable validity date on page 1")
 
 
 def _military_boundary(page) -> float | None:
@@ -230,12 +259,17 @@ def _centre(word: dict) -> float:
 
 
 def _day(text: str) -> date:
-    """Read one of the validity dates the list prints, e.g. ``02 Oct 2025``.
+    """Read one of the validity dates the list prints, e.g. ``02 Oct 2025`` or ``04 September 2026``.
 
     The date carries no time of day and so no zone, and is narrowed to a ``date`` here before
     anything can read one into it.
     """
-    return datetime.strptime(text, "%d %b %Y").date()  # noqa: DTZ007
+    for month in ("%b", "%B"):
+        try:
+            return datetime.strptime(text, f"%d {month} %Y").date()  # noqa: DTZ007
+        except ValueError:
+            continue
+    raise ValidationError(f"Cold temperature PDF prints an unreadable date {text!r}")
 
 
 def _tally(segments: list[str]) -> dict[str, int]:

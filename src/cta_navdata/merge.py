@@ -65,7 +65,7 @@ def _meta(
         },
         "coldTemperatureList": {
             "effectiveFrom": cold_temperature.effective_from.isoformat(),
-            "effectiveTo": cold_temperature.effective_to.isoformat(),
+            "effectiveTo": cold_temperature.effective_to and cold_temperature.effective_to.isoformat(),
         },
         "counts": {
             "airports": len(airports),

@@ -44,6 +44,29 @@ class TestScrape:
         assert "Alaska" not in identifiers
 
 
+class TestScrapeOpenEndedEdition:
+    def test_reads_an_effective_date_standing_until_superseded(self, open_ended_cold_temperature_list):
+        assert open_ended_cold_temperature_list.effective_from == date(2026, 9, 4)
+        assert open_ended_cold_temperature_list.effective_to is None
+        assert open_ended_cold_temperature_list.covers(date(2027, 9, 30))
+        assert not open_ended_cold_temperature_list.covers(date(2026, 9, 3))
+
+    def test_reads_a_signed_temperature_above_freezing(self, open_ended_cold_temperature_list):
+        assert open_ended_cold_temperature_list.by_identifier()["PAJN"].restriction_temperature_c == 1
+
+    def test_reads_a_temperature_printed_without_its_unit(self, open_ended_cold_temperature_list):
+        assert open_ended_cold_temperature_list.by_identifier()["KEFK"].restriction_temperature_c == -32
+
+    def test_reattaches_a_mark_set_on_the_state_label_above_its_row(self, open_ended_cold_temperature_list):
+        """D55's X is typeset on the North Dakota label line rather than its own."""
+        robertson = open_ended_cold_temperature_list.by_identifier()["D55"]
+
+        assert robertson.affected_segments == ("Final",)
+
+    def test_flags_the_military_table_on_the_last_page(self, open_ended_cold_temperature_list):
+        assert open_ended_cold_temperature_list.by_identifier()["PAEI"].military
+
+
 class TestLayoutGates:
     """The scrape must fail rather than silently attribute X marks to the wrong segment."""
 
@@ -74,6 +97,16 @@ class TestLayoutGates:
 
             with pytest.raises(ValidationError, match="X marks disagree with the extracted table"):
                 cold_temp._reject_mismatched_marks(page, table, columns, understated)
+
+    def test_a_mark_on_a_state_label_over_a_marked_row_is_left_to_fail(self):
+        """Only a row with no marks of its own can have been the one set a line low."""
+        rows = [
+            ["North Dakota", "", "", "", "", "X", ""],
+            ["D55", "Robertson Field", "-35C", "", "X", "", ""],
+        ]
+
+        with pytest.raises(ValidationError, match="cannot read row"):
+            cold_temp._reject_unreadable_rows(cold_temp._reattach_stray_marks(rows), _page())
 
 
 def _page():
