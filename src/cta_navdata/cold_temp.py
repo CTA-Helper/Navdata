@@ -266,7 +266,7 @@ def _day(text: str) -> date:
     """
     for month in ("%b", "%B"):
         try:
-            return datetime.strptime(text, f"%d {month} %Y").date()  # noqa: DTZ007
+            return datetime.strptime(text, f"%d {month} %Y").date()
         except ValueError:
             continue
     raise ValidationError(f"Cold temperature PDF prints an unreadable date {text!r}")

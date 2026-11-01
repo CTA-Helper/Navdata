@@ -29,11 +29,11 @@ jobs:
     # Runs on the ubuntu-latest host rather than a container so the preinstalled gh CLI is available.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.13'
+          python-version: '3.15'
           cache: pip
 
       - name: Install
@@ -113,7 +113,7 @@ jobs:
 
       - name: Upload diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           # The cycle is unresolved when the run fails before the step that reckons it.
           name: diagnostics-${{ steps.cycle.outputs.tag || github.run_id }}

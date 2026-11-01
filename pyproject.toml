@@ -4,16 +4,16 @@ version = "1.0.0"
 description = "Builds the cold temperature altitude correction navigation database from FAA source data"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["arinc424>=0.3.0", "defusedxml>=0.7", "httpx>=0.28", "pdfplumber>=0.11"]
+dependencies = ["arinc424>=0.3.0", "defusedxml>=0.7.1", "httpx>=0.28.1", "pdfplumber>=0.11.10"]
 
 [project.scripts]
 cta-navdata = "cta_navdata.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.0", "ruff>=0.14"]
+dev = ["pytest>=9.2.0", "ruff>=0.17.3"]
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
