@@ -2,12 +2,12 @@ name: Publish Nav Data
 
 on:
   schedule:
-    # Daily. Publishes the next cycle on the day before it takes effect: the FAA posts CIFP
-    # weeks early, but the d-TPP metafile only covers the current and next cycles, so this is
-    # the earliest point at which every source for the incoming cycle is available. On any
-    # other day it publishes the current cycle if that has no release yet, so a failed run is
-    # retried daily until it succeeds.
-    - cron: '0 9 * * *'
+    # Wednesdays and Thursdays. Publishes the next cycle on the day before it takes effect, always
+    # a Wednesday since cycles take effect on Thursdays: the FAA posts CIFP weeks early, but the
+    # d-TPP metafile only covers the current and next cycles, so this is the earliest point at which
+    # every source for the incoming cycle is available. On Thursday it publishes the current cycle
+    # if that has no release yet, so a failed Wednesday run is retried the next day.
+    - cron: '0 9 * * 3,4'
   workflow_dispatch:
     inputs:
       cycle:
